@@ -1,26 +1,16 @@
-// Milestone 1: Recuperare e visualizzare i dati
-// Effettua una chiamata API a
-// https://boolean-spec-frontend.vercel.app/freetestapi/politicians
+// Milestone 2: Implementare la ricerca ottimizzata
+// Aggiungi un campo di ricerca (<input type="text">) sopra la lista dei politici.
+// Permetti all’utente di filtrare i risultati in base a nome o biografia (se il testo cercato è incluso). Suggerimento: Creare un array derivato filtrato, che viene aggiornato solo quando cambia la lista di politici o il valore della ricerca.
+// ❌ Non usare useEffect per aggiornare l’array filtrato.
 
-// Salva la risposta in uno stato React (useState).
-
-// Mostra i politici in una lista di card, visualizzando almeno le seguenti proprietà:
-
-// Nome (name)
-// Immagine (image)
-// Posizione (position)
-// Breve biografia (biography)
-
-// Obiettivo: Caricare e mostrare i politici in un’interfaccia chiara e leggibile.
-
-
-
+// Obiettivo: Migliorare le prestazioni evitando ricalcoli inutili quando il valore della ricerca non cambia.
 
 import React from "react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 
 function App() {
   const [politicians, setPoliticians] = useState([]);
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     async function fetchJson(url) {
@@ -32,11 +22,27 @@ function App() {
     fetchJson('https://boolean-spec-frontend.vercel.app/freetestapi/politicians');
   }, []);
 
+  const filteredPoliticians = useMemo(() => {
+    return politicians.filter(politician => {
+      const isInName = politician.name.toLowerCase().includes(search.toLowerCase());
+      const isInBio = politician.biography.toLowerCase().includes(search.toLowerCase());
+      return isInName || isInBio;
+    })
+  }, [politicians, search])
+
   return (
     <>
       <h1>Politici</h1>
+      <div className="search">
+        <input
+          type="text"
+          placeholder="Cerca per nome o biografia"
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+        />
+      </div>
       <ul className="list">
-        {politicians.map(p => (
+        {filteredPoliticians.map(p => (
           <li key={p.id}>
             <div className="card">
               <div className="card-image">
