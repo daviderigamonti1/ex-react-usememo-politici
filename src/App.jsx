@@ -1,9 +1,9 @@
-// Milestone 2: Implementare la ricerca ottimizzata
-// Aggiungi un campo di ricerca (<input type="text">) sopra la lista dei politici.
-// Permetti all’utente di filtrare i risultati in base a nome o biografia (se il testo cercato è incluso). Suggerimento: Creare un array derivato filtrato, che viene aggiornato solo quando cambia la lista di politici o il valore della ricerca.
-// ❌ Non usare useEffect per aggiornare l’array filtrato.
+// Milestone 3: Ottimizzare il rendering delle card con React.memo
+// Attualmente, ogni volta che l’utente digita nella barra di ricerca, tutte le card vengono ri-renderizzate, anche quelle che non sono cambiate.
+// Usa React.memo() per evitare il ri-render delle card quando le loro props non cambiano.
+// Aggiungi un console.log() dentro il componente Card per verificare che venga renderizzato solo quando necessario.
 
-// Obiettivo: Migliorare le prestazioni evitando ricalcoli inutili quando il valore della ricerca non cambia.
+// Obiettivo: Se la lista filtrata cambia, solo le nuove card devono essere renderizzate, mentre le altre rimangono in memoria senza essere ridisegnate.
 
 import React from "react";
 import { useState, useEffect, useMemo } from "react";
@@ -18,7 +18,6 @@ function App() {
       const data = await response.json();
       setPoliticians(data);
     }
-
     fetchJson('https://boolean-spec-frontend.vercel.app/freetestapi/politicians');
   }, []);
 
@@ -29,6 +28,22 @@ function App() {
       return isInName || isInBio;
     })
   }, [politicians, search])
+
+  const PoliticianCard = React.memo(({ name, image, position, biography }) => {
+    console.log("Card", name);
+    return (
+      <div className="card">
+        <div className="card-image">
+          <img src={image} alt={name} />
+        </div>
+        <div className="card-content">
+          <span>{name}</span>
+          <span>{position}</span>
+          <span>{biography}</span>
+        </div>
+      </div>
+    )
+  })
 
   return (
     <>
@@ -44,16 +59,7 @@ function App() {
       <ul className="list">
         {filteredPoliticians.map(p => (
           <li key={p.id}>
-            <div className="card">
-              <div className="card-image">
-                <img src={p.image} alt={p.name} />
-              </div>
-              <div className="card-content">
-                <span>{p.name}</span>
-                <span>{p.position}</span>
-                <span>{p.biography}</span>
-              </div>
-            </div>
+            <PoliticianCard {...p} />
           </li>
         ))}
       </ul>
