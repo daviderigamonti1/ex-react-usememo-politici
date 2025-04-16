@@ -1,9 +1,7 @@
-// Milestone 3: Ottimizzare il rendering delle card con React.memo
-// Attualmente, ogni volta che l’utente digita nella barra di ricerca, tutte le card vengono ri-renderizzate, anche quelle che non sono cambiate.
-// Usa React.memo() per evitare il ri-render delle card quando le loro props non cambiano.
-// Aggiungi un console.log() dentro il componente Card per verificare che venga renderizzato solo quando necessario.
-
-// Obiettivo: Se la lista filtrata cambia, solo le nuove card devono essere renderizzate, mentre le altre rimangono in memoria senza essere ridisegnate.
+// Bonus: Filtrare anche per posizione politica (position)
+// Creare un array derivato che contiene tutte le posizioni politiche (position) disponibili, ma senza duplicati.
+// Aggiungere un <select> sopra la lista che permette di filtrare i politici anche in base alla loro posizione.
+// Modificare l’array filtrato per tenere conto sia della stringa di ricerca, sia della posizione selezionata.
 
 import React from "react";
 import { useState, useEffect, useMemo } from "react";
@@ -11,6 +9,7 @@ import { useState, useEffect, useMemo } from "react";
 function App() {
   const [politicians, setPoliticians] = useState([]);
   const [search, setSearch] = useState("");
+  const [selectedPosition, setSelectedPosition] = useState("");
 
   useEffect(() => {
     async function fetchJson(url) {
@@ -21,16 +20,25 @@ function App() {
     fetchJson('https://boolean-spec-frontend.vercel.app/freetestapi/politicians');
   }, []);
 
+  const positions = useMemo(() => {
+    return politicians.reduce((acc, p) => {
+      if (!acc.includes(p.position)) {
+        return [...acc, p.position];
+      }
+      return acc;
+    }, []);
+  }, [politicians]);
+
   const filteredPoliticians = useMemo(() => {
     return politicians.filter(politician => {
       const isInName = politician.name.toLowerCase().includes(search.toLowerCase());
       const isInBio = politician.biography.toLowerCase().includes(search.toLowerCase());
-      return isInName || isInBio;
+      const isPositionValid = selectedPosition === '' || selectedPosition === politician.position;
+      return (isInName || isInBio) && isPositionValid;
     })
-  }, [politicians, search])
+  }, [politicians, search, selectedPosition])
 
   const PoliticianCard = React.memo(({ name, image, position, biography }) => {
-    console.log("Card", name);
     return (
       <div className="card">
         <div className="card-image">
@@ -55,6 +63,15 @@ function App() {
           value={search}
           onChange={e => setSearch(e.target.value)}
         />
+        <select
+          value={selectedPosition}
+          onChange={e => setSelectedPosition(e.target.value)}
+        >
+          <option value="">Filtra per posizione</option>
+          {positions.map((position, index) => (
+            <option key={index} value={position}>{position}</option>
+          ))}
+        </select>
       </div>
       <ul className="list">
         {filteredPoliticians.map(p => (
